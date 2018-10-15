@@ -2,7 +2,9 @@
     "name": "bradykeeling/modern-php-without-a-framework",
     "description": "An example of a modern PHP application bootstrapped without a framework.",
     "type": "project",
-    "require": {},
+    "require": {
+        "php-di/php-di": "^6.0"
+    },
     "autoload": {
         "psr-4": {"ExampleApp\\": "src/"}
     }

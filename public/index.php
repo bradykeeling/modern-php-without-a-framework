@@ -7,10 +7,12 @@ use function DI\get;
 use function DI\create;
 use DI\ContainerBuilder;
 use Middlewares\FastRoute;
+use Zend\Diactoros\Response;
 use FastRoute\RouteCollector;
 use Middlewares\RequestHandler;
 use function FastRoute\simpleDispatcher;
 use Zend\Diactoros\ServerRequestFactory;
+use Zend\HttpHandlerRunner\Emitter\SapiEmitter;
 
 
 require_once dirname(__DIR__) . '/vendor/autoload.php';
@@ -20,8 +22,11 @@ $containerBuilder->useAutowiring(false);
 $containerBuilder->useAnnotations(false);
 $containerBuilder->addDefinitions([
     HelloWorld::class => create(HelloWorld::class)
-        ->constructor(get('Foo')),
+        ->constructor(get('Foo'), get('Response')),
         'Foo' => 'bar',
+        'Response' => function() {
+            return new Response();
+        },
 ]);
 
 $container = $containerBuilder->build();
@@ -34,7 +39,10 @@ $middlewareQueue[] = new FastRoute($routes);
 $middlewareQueue[] = new RequestHandler($container);
 
 $requestHandler = new Relay($middlewareQueue);
-$requestHandler->handle(ServerRequestFactory::fromGlobals());
+$response = $requestHandler->handle(ServerRequestFactory::fromGlobals());
 
-$helloWorld = $container->get(HelloWorld::class);
-$helloWorld->announce();
+$emitter = new SapiEmitter();
+return $emitter->emit($response);
+
+// $helloWorld = $container->get(HelloWorld::class);
+// $helloWorld->announce();
